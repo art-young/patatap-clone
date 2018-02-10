@@ -1,12 +1,12 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Circles</title>
+  <title>Patatap Clone</title>
 
   <!-- Load the Paper.js library -->
   <script type="text/javascript" src="paper-full.js"></script>
   <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/howler/2.0.8/howler.min.js"></script>
-  <link rel="stylesheet" type="text/css" href="circles.css">
+  <link rel="stylesheet" type="text/css" href="shapes.css">
 
   <!-- Define inlined PaperScript associate it with myCanvas -->
   <script type="text/paperscript" canvas="myCanvas">
@@ -170,33 +170,65 @@
       }
     }
 
-    var circles = [];
+    var shapes = [];
 
     function onKeyDown(event) {
 
-      // If keyData has an entry for key pressed, make circle and sound and animate
+      // If keyData has an entry for key pressed, make shape and sound and animate
       if (keyData[event.key]){
+
+        // Draw shape in random spot
         var maxPoint = new Point(view.size.width, view.size.height);
         var randomPoint = Point.random();
         var point = maxPoint * randomPoint;
-        var newCircle = new Path.Circle(point, 500);
+        var numSides = Math.floor(Math.random() * 10) + 1;
+        var newShape;
+        if (numSides === 1 || numSides === 2)
+          newShape = new Path.Circle(point, 500);
+        else 
+          newShape = new Path.RegularPolygon(point, numSides, 500);
 
+        // Play sound and fill with color
         keyData[event.key].sound.play();
-        newCircle.fillColor = keyData[event.key].color;
+        newShape.fillColor = keyData[event.key].color;
 
-        circles.push(newCircle);
+        // Used for movement animation
+        var destination = Point.random() * view.size;
+
+        // Create shape object and add to shapes array
+        var shapeObject = {
+            shape: newShape,
+            destination: destination
+        };
+
+        shapes.push(shapeObject);
       }
       
     }
 
+        
+    
+
     function onFrame(event) {
-      for (var i = 0; i < circles.length; i++){
-        circles[i].fillColor.hue += 1;
-        circles[i].scale(.9);
-        if(circles[i].area < 1){
-          circles[i].remove(); // remove the circle from the canvas
-          circles.splice(i, 1); // remove the circle from the array
-          i--; // decrement i so that the loop doesn't skip a circle because of .splice()
+      
+      // Loop through each shape on the screen and animate
+      for (var i = 0; i < shapes.length; i++){
+
+        // Change color
+        shapes[i].shape.fillColor.hue += 1;
+
+        // Shrink
+        shapes[i].shape.scale(.9);
+
+        // Move
+        var vector = shapes[i].destination - shapes[i].shape.position;
+        shapes[i].shape.position += vector / 20;
+        
+        // Clean up shapes array
+        if(shapes[i].area < 1){
+          shapes[i].remove(); // remove the shape from the canvas
+          shapes.splice(i, 1); // remove the shape from the array
+          i--; // decrement i so that the loop doesn't skip a shape because of .splice()
         }
       }
     }
